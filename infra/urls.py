@@ -2,5 +2,5 @@ from django.conf.urls import url
 from infra import views
 
 urlpatterns = [
-    url(r'^userslist/$', views.users_list),
+    url(r'^user/$', views.user_view),
 ]
