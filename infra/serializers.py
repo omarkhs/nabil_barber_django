@@ -34,19 +34,10 @@ class RegistrationSerializer(serializers.ModelSerializer):
         ret.pop('password')
         return ret
 
-    # def validate_password(self, value):
-        # try:
-            # validators.validate_password(value)
-        # except serializers.ValidationError as exc:
-            # raise serializers.ValidationError(str(exc))
-        # return value
     def validate(self, data):
-        # validators.validate_password(password=data, user=User)
-        # return data
-
         # here data has all the fields which have validated values
         # so we can create a User instance out of it
-        data.pop('profile')
+        profile = data.pop('profile')
         user = User(**data)
 
         # get the password from the data
@@ -64,7 +55,8 @@ class RegistrationSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
 
-        return super(RegisterUserSerializer, self).validate(data)
+        data[ 'profile' ] = profile
+        return super(RegistrationSerializer, self).validate(data)
 
     def create(self, validated_data):
         profile_data = validated_data.pop('profile')
@@ -72,3 +64,5 @@ class RegistrationSerializer(serializers.ModelSerializer):
         user.set_password( validated_data.pop('password') )
         Profile.objects.create(user=user, **profile_data)
         return user
+
+

@@ -12,13 +12,14 @@ from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import IsAuthenticated
 from infra.serializers import UserSerializer, RegistrationSerializer
+from django.core.exceptions import ObjectDoesNotExist
 
 # Create your views here.
-@api_view(['GET', 'POST'])
-# @renderer_classes((JSONRenderer,))
+@api_view(['GET', 'POST', 'DELETE'])
+@renderer_classes((JSONRenderer,))
 # @permission_classes((IsAuthenticated, ))
 @csrf_exempt
-def user_view(request, format=None):
+def user_view(request, pk=None, format=None):
     if request.method == 'GET':
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
@@ -31,3 +32,12 @@ def user_view(request, format=None):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    elif request.method == 'DELETE':
+        user = None
+        try:
+            user = User.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            return Response( {}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        user.delete()
+        return Response( {}, status=status.HTTP_202_ACCEPTED )
