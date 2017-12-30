@@ -11,26 +11,46 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import IsAuthenticated
-from infra.serializers import UserSerializer, RegistrationSerializer
+from infra.serializers import UserSerializer
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import authenticate, login
 
-# Create your views here.
-@api_view(['GET', 'POST', 'DELETE', 'PUT'])
+@api_view(['POST'])
 @renderer_classes((JSONRenderer,))
-# @permission_classes((IsAuthenticated, ))
 @csrf_exempt
-def user_view(request, pk=None, format=None):
-    if request.method == 'GET':
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    elif request.method == 'POST':
-        serializer = RegistrationSerializer(data=request.data)
+def register_view(request):
+    if request.method == 'POST':
+        serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@renderer_classes((JSONRenderer,))
+@csrf_exempt
+def login_view(request):
+    username = request.POST.get('username', None);
+    password = request.POST.get('password', None);
+    user = authenticate(request, username=username, password=password)
+    if user:
+        login(request, user)
+        return Response({}, status=status.HTTP_200_OK)
+    else:
+        return Response({'auth':'Authenticaion failed'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'DELETE', 'PUT'])
+@renderer_classes((JSONRenderer,))
+@permission_classes((IsAuthenticated, ))
+@csrf_exempt
+def user_view(request, pk=None, format=None):
+    if request.method == 'GET':
+        if request.user.is_authenticated():
+            users = User.objects.all()
+            serializer = UserSerializer(users, many=True)
+            return JsonResponse(serializer.data, safe=False)
+        else:
+            return Response({'auth':'User is not authenticated'}, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
         user = None
@@ -49,8 +69,10 @@ def user_view(request, pk=None, format=None):
         except ObjectDoesNotExist:
             return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        serializer = RegistrationSerializer(user, data=request.data)
+        serializer = UserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
