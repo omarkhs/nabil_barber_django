@@ -19,7 +19,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'first_name', 'last_name', 'email',
                 'profile', 'password',)
 
-
 class RegistrationSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
     class Meta:
@@ -65,4 +64,17 @@ class RegistrationSerializer(serializers.ModelSerializer):
         Profile.objects.create(user=user, **profile_data)
         return user
 
-
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.email = validated_data.get('email', instance.email)
+        instance.password = validated_data.get('password', instance.password)
+        # updates the phone_number in the profile of the user
+        profile_dict = validated_data.get('profile', None)
+        if profile_dict:
+            phone_number = profile_dict['phone_number']
+            profile = Profile.objects.get(user=instance)
+            profile.phone_number = phone_number
+            profile.save()
+        instance.save()
+        return instance
