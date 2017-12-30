@@ -15,7 +15,7 @@ from infra.serializers import UserSerializer, RegistrationSerializer
 from django.core.exceptions import ObjectDoesNotExist
 
 # Create your views here.
-@api_view(['GET', 'POST', 'DELETE'])
+@api_view(['GET', 'POST', 'DELETE', 'PUT'])
 @renderer_classes((JSONRenderer,))
 # @permission_classes((IsAuthenticated, ))
 @csrf_exempt
@@ -37,7 +37,20 @@ def user_view(request, pk=None, format=None):
         try:
             user = User.objects.get(id=pk)
         except ObjectDoesNotExist:
-            return Response( {}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         user.delete()
-        return Response( {}, status=status.HTTP_202_ACCEPTED )
+        return Response({}, status=status.HTTP_202_ACCEPTED)
+
+    elif request.method == 'PUT':
+        user = None
+        try:
+            user = User.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        serializer = RegistrationSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
