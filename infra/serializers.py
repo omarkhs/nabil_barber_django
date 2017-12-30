@@ -27,9 +27,13 @@ class UserSerializer(serializers.ModelSerializer):
         return ret
 
     def validate(self, data):
+        # In case of update
+        if 'password' not in data:
+            return super(UserSerializer, self).validate(data)
+
         # here data has all the fields which have validated values
         # so we can create a User instance out of it
-        profile = data.pop('profile')
+        profile = data.pop('profile', None)
         user = User(**data)
 
         # get the password from the data
@@ -47,7 +51,8 @@ class UserSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
 
-        data[ 'profile' ] = profile
+        if profile:
+            data[ 'profile' ] = profile
         return super(UserSerializer, self).validate(data)
 
     def create(self, validated_data):
@@ -60,7 +65,9 @@ class UserSerializer(serializers.ModelSerializer):
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.email = validated_data.get('email', instance.email)
-        instance.password = validated_data.get('password', instance.password)
+        if 'password' in validated_data:
+            password = validated_data.get( 'password', instance.password )
+            instance.set_password( password )
         # updates the phone_number in the profile of the user
         profile_dict = validated_data.get('profile', None)
         if profile_dict:
