@@ -24,7 +24,7 @@ class UserRegistrationTestCase(APITestCase):
         '''
         data = self.userInfo
         self.userInfo[ 'password' ] = 'short'
-        response = self.client.post('/user/', data, format='json')
+        response = self.client.post('/register/', data, format='json')
         self.assertEqual( response.status_code, status.HTTP_400_BAD_REQUEST )
 
     def test_register_similar_password( self ):
@@ -33,13 +33,13 @@ class UserRegistrationTestCase(APITestCase):
         '''
         data = self.userInfo
         self.userInfo[ 'password' ] = 'jackie2'
-        response = self.client.post('/user/', data, format='json')
+        response = self.client.post('/register/', data, format='json')
         self.assertEqual( response.status_code, status.HTTP_400_BAD_REQUEST )
 
     def test_register_password_all_numbers( self ):
         data = self.userInfo
         self.userInfo[ 'password' ] = '4549841514684'
-        response = self.client.post('/user/', data, format='json')
+        response = self.client.post('/register/', data, format='json')
         self.assertEqual( response.status_code, status.HTTP_400_BAD_REQUEST )
 
     def test_register_password_is_common( self ):
@@ -49,8 +49,28 @@ class UserRegistrationTestCase(APITestCase):
         '''
         data = self.userInfo
         self.userInfo[ 'password' ] = 'trustno1'
-        response = self.client.post('/user/', data, format='json')
+        response = self.client.post('/register/', data, format='json')
         self.assertEqual( response.status_code, status.HTTP_400_BAD_REQUEST )
+
+    def test_register_good_password( self ):
+        data = self.userInfo
+        self.userInfo[ 'password' ] = 'rekkfjoi8973f'
+        response = self.client.post('/register/', data, format='json')
+        self.assertEqual( response.status_code, status.HTTP_201_CREATED )
+
+        username = self.userInfo['username']
+        password = self.userInfo[ 'password' ]
+        login_data = { 'username': username, 'password': password }
+        response = self.client.post('/login/', login_data, secure=False)
+        self.assertEqual( response.status_code, status.HTTP_200_OK )
+
+        response = self.client.get('/user/', data, format='json')
+        self.assertEqual( response.status_code, status.HTTP_200_OK )
+        json = response.json()
+        if 'password' in json[0]:
+            assert False, 'password retrieved'
+
+
 
 
 class UserDeleteTestCase(APITestCase):
@@ -62,8 +82,13 @@ class UserDeleteTestCase(APITestCase):
         self.userInfo[ 'password' ] = 'rotiIXc78_9' # random password :)
 
         data = self.userInfo
-        response = self.client.post('/user/', data, format='json')
+        response = self.client.post('/register/', data, format='json')
         self.assertEqual( response.status_code, status.HTTP_201_CREATED )
+
+        login_data = { 'username': self.userInfo['username'], 'password':
+                self.userInfo['password'] }
+        response = self.client.post('/login/', login_data, secure=False)
+        self.assertEqual( response.status_code, status.HTTP_200_OK )
 
     def test_delete_user( self ):
         user = User.objects.get( username = 'jackie' )
@@ -78,6 +103,7 @@ class UserDeleteTestCase(APITestCase):
         response = self.client.delete('/user/15/', {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
+
 class UserUpdateTestCase(APITestCase):
     def setUp( self ):
         self.userInfo = {'username': 'jackie', 'first_name':'Jack',
@@ -86,8 +112,13 @@ class UserUpdateTestCase(APITestCase):
         self.userInfo[ 'password' ] = 'rotiIXc78_9'
 
         data = self.userInfo
-        response = self.client.post('/user/', data, format='json')
+        response = self.client.post('/register/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        login_data = { 'username': self.userInfo['username'], 'password':
+                self.userInfo['password'] }
+        response = self.client.post('/login/', login_data, secure=False)
+        self.assertEqual( response.status_code, status.HTTP_200_OK )
 
     def test_update_first_name(self):
         user = User.objects.get(username='jackie')
@@ -125,6 +156,7 @@ class UserUpdateTestCase(APITestCase):
         self.assertEqual(user.email, 'newEmail@email.com')
 
     def test_update_password(self):
+        #TODO: replace raw password comparison with login to verify new password
         data = self.userInfo
         self.userInfo['password'] = 'newPassword'
         response = self.client.put('/user/1/', data, format='json')
@@ -137,12 +169,11 @@ class UserUpdateTestCase(APITestCase):
         self.assertEqual(user.password, 'newPassword')
 
     def test_update_profile(self):
-        user = User.objects.get(username='jackie')
         data = self.userInfo
         profile = self.userInfo['profile']
         profile['phone_number'] = '+17789290706'
         response = self.client.put('/user/1/', data, format='json')
-        print response
+        user = User.objects.get(username='jackie')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(user.profile.phone_number, '+17789290706')
         self.assertEqual(user.first_name, 'Jack')

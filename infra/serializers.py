@@ -16,20 +16,13 @@ class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email',
-                'profile', 'password',)
-
-class RegistrationSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
-    class Meta:
-        model = User
         fields = ('username', 'password', 'first_name', 'last_name', 'email',
                 'profile',)
         extra_kwargs = {'email': {'required': 'True'}}
         write_only_fields = ('password',)
 
     def to_representation(self, obj):
-        ret = super(RegistrationSerializer, self).to_representation(obj)
+        ret = super(UserSerializer, self).to_representation(obj)
         ret.pop('password')
         return ret
 
@@ -55,12 +48,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         data[ 'profile' ] = profile
-        return super(RegistrationSerializer, self).validate(data)
+        return super(UserSerializer, self).validate(data)
 
     def create(self, validated_data):
         profile_data = validated_data.pop('profile')
-        user = User.objects.create(**validated_data)
-        user.set_password( validated_data.pop('password') )
+        user = User.objects.create_user(**validated_data)
         Profile.objects.create(user=user, **profile_data)
         return user
 
