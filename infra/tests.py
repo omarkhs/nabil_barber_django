@@ -71,8 +71,6 @@ class UserRegistrationTestCase(APITestCase):
             assert False, 'password retrieved'
 
 
-
-
 class UserDeleteTestCase(APITestCase):
 
     def setUp( self ):
@@ -112,7 +110,6 @@ class UserUpdateTestCase(APITestCase):
         'last_name':'Bell', 'email':'test@test.com',
                 'profile':{ 'phone_number' : '+16473459800'} }
         cls.userInfo[ 'password' ] = 'rotiIXc78_9'
-
 
     def prepare_test( self ):
         response = self.client.post('/register/', self.userInfo, format='json')
@@ -172,6 +169,47 @@ class UserUpdateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(user.profile.phone_number, '+17789290706')
 
+    # This is a test case where unlogged user tries to update any user,
+    # You should log out first, then try to update and it should fail
+    def update_by_non_logged_user( self ):
+        #TODO
+        pass
+
+    def update_by_another_user( self ):
+        userInfo = {'username': 'ahmed', 'first_name':'ahmed',
+        'last_name':'hassan', 'email':'ahmedHassan@Alhly.com',
+                'profile':{ 'phone_number' : '+16473459803'} }
+        userInfo[ 'password' ] = 'rotIXc78_bn4'
+
+        response = self.client.post('/register/', userInfo, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        login_data = { 'username': userInfo['username'], 'password':
+                userInfo['password'] }
+
+        response = self.client.post('/login/', login_data, secure=False)
+        self.assertEqual( response.status_code, status.HTTP_200_OK )
+
+        # At this point this user has id number 2
+        other_user = User.objects.get( username='ahmed' )
+        self.assertEqual( other_user.id, 2 )
+
+        # Try to change the password of another user
+        data = {}
+        data['password'] = 'newPasswordToHack'
+        response = self.client.put('/user/1/', data, format='json')
+
+        user = User.objects.get(username='jackie')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        # NOTE: the return code should be either 401 or 403, I am not sure, when the
+        # feature is working properly, it should return this.
+
+        # It should fail before it reaches this point, if it doesn't then the user is
+        # able to change the password of another user.
+        assert False, 'I should not be here'
+
+
     def test_update( self ):
         self.prepare_test()
 
@@ -180,6 +218,8 @@ class UserUpdateTestCase(APITestCase):
         self.update_email_test()
         self.update_password_test()
         self.update_profile_test()
+        self.update_by_non_logged_user()
+        self.update_by_another_user()
 
 
 class UserLoginLogout(APITestCase):
