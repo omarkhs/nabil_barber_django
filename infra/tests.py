@@ -112,6 +112,24 @@ class UserUpdateTestCase(APITestCase, TestCaseMixin):
     def setUpTestData( cls ):
         cls.userInfo = generateUser()
 
+    def test_delete_user( self ):
+        response = self.client.delete('/user/1/', {}, format='json')
+        self.assertEqual( response.status_code, status.HTTP_202_ACCEPTED )
+
+        all_users = User.objects.all()
+        self.assertEqual( len( all_users ), 0 )
+
+    def test_delete_non_existence_user( self ):
+        response = self.client.delete('/user/15/', {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+
+class UserUpdateTestCase(APITestCase, TestCaseMixin):
+
+    @classmethod
+    def setUpTestData( cls ):
+        cls.userInfo = generateUser()
+
     def prepare( self ):
         self.registerUser( self.userInfo )
         self.loginUser( self.userInfo )
@@ -175,22 +193,13 @@ class UserUpdateTestCase(APITestCase, TestCaseMixin):
         pass
 
     def update_by_another_user( self ):
-        userInfo = {'username': 'ahmed', 'first_name':'ahmed',
-        'last_name':'hassan', 'email':'ahmedHassan@Alhly.com',
-                'profile':{ 'phone_number' : '+16473459803'} }
-        userInfo[ 'password' ] = 'rotIXc78_bn4'
+        other_userInfo = generateUser()
 
-        response = self.client.post('/register/', userInfo, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        login_data = { 'username': userInfo['username'], 'password':
-                userInfo['password'] }
-
-        response = self.client.post('/login/', login_data, secure=False)
-        self.assertEqual( response.status_code, status.HTTP_200_OK )
+        self.registerUser( other_userInfo )
+        self.loginUser( other_userInfo )
 
         # At this point this user has id number 2
-        other_user = User.objects.get( username='ahmed' )
+        other_user = User.objects.get( username=other_userInfo['username'] )
         self.assertEqual( other_user.id, 2 )
 
         # Try to change the password of another user
@@ -198,7 +207,7 @@ class UserUpdateTestCase(APITestCase, TestCaseMixin):
         data['password'] = 'newPasswordToHack'
         response = self.client.put('/user/1/', data, format='json')
 
-        user = User.objects.get(username='jackie')
+        user = User.objects.get(username=self.userInfo['username'])
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
         # NOTE: the return code should be either 401 or 403, I am not sure, when the
@@ -217,7 +226,8 @@ class UserUpdateTestCase(APITestCase, TestCaseMixin):
         self.update_email_case()
         self.update_password_case()
         self.update_profile_case()
-
+        self.update_by_non_logged_user()
+        self.update_by_another_user()
 
 class UserLoginLogout(APITestCase, TestCaseMixin):
     def setUp( self ):
