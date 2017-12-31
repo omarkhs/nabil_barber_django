@@ -13,18 +13,6 @@ LOGIN_URL = '/login/'
 LOGOUT_URL = '/logout/'
 
 
-def loginUser( data ):
-    login_data = {'username': data['username'], 'password': data['password']}
-    response = self.client.post(LOGIN_URL, login_data, secure=False)
-    self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-def registerUser( self, data, fail=False ):
-    response = self.client.post(REGISTRATION_URL, data, format='json')
-    if not fail:
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    else:
-        self.assertEqual( response.status_code, status.HTTP_400_BAD_REQUEST )
-
 # Must be inhereited with APITestCase
 class TestCaseMixin():
     def loginUser( self, data ):
