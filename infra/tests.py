@@ -92,7 +92,6 @@ class UserDeleteTestCase(APITestCase, TestCaseMixin):
         self.userInfo = generateUser()
         self.registerUser( self.userInfo )
         self.loginUser( self.userInfo )
-        self.loginUser( self.userInfo )
 
     def test_delete_user( self ):
         response = self.client.delete('/user/1/', {}, format='json')
