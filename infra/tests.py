@@ -180,3 +180,47 @@ class UserUpdateTestCase(APITestCase):
         self.update_email_test()
         self.update_password_test()
         self.update_profile_test()
+
+
+class UserLoginLogout(APITestCase):
+    def setUp( self ):
+        self.userInfo = {'username': 'jackie', 'first_name':'Jack',
+        'last_name':'Bell', 'email':'test@test.com',
+                'profile':{ 'phone_number' : '+16473459800'} }
+        self.userInfo[ 'password' ] = 'rotiIXc78_9'
+
+        data = self.userInfo
+        response = self.client.post('/register/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_login(self):
+        login_data = {'username': self.userInfo['username'], 'password':
+            self.userInfo['password']}
+        response = self.client.post('/login/', login_data, secure=False)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_logout(self):
+        login_data = {'username': self.userInfo['username'], 'password':
+            self.userInfo['password']}
+        response = self.client.post('/login/', login_data, secure=False)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.post('/logout/')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+
+    def test_logout_when_no_user_was_already_loggedIn(self):
+        response = self.client.post('/logout/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_logout_when_called_twice(self):
+        login_data = {'username': self.userInfo['username'], 'password':
+            self.userInfo['password']}
+        response = self.client.post('/login/', login_data, secure=False)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # first request to logout
+        response = self.client.post('/logout/')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        # calling logout again after user is already logged out
+        response = self.client.post('/logout/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
