@@ -105,14 +105,17 @@ class UserDeleteTestCase(APITestCase):
 
 
 class UserUpdateTestCase(APITestCase):
-    def setUp( self ):
-        self.userInfo = {'username': 'jackie', 'first_name':'Jack',
+
+    @classmethod
+    def setUpTestData( cls ):
+        cls.userInfo = {'username': 'jackie', 'first_name':'Jack',
         'last_name':'Bell', 'email':'test@test.com',
                 'profile':{ 'phone_number' : '+16473459800'} }
-        self.userInfo[ 'password' ] = 'rotiIXc78_9'
+        cls.userInfo[ 'password' ] = 'rotiIXc78_9'
 
-        data = self.userInfo
-        response = self.client.post('/register/', data, format='json')
+
+    def prepare_test( self ):
+        response = self.client.post('/register/', self.userInfo, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         login_data = { 'username': self.userInfo['username'], 'password':
@@ -120,62 +123,60 @@ class UserUpdateTestCase(APITestCase):
         response = self.client.post('/login/', login_data, secure=False)
         self.assertEqual( response.status_code, status.HTTP_200_OK )
 
-    def test_update_first_name(self):
-        user = User.objects.get(username='jackie')
-        self.assertEqual(user.id, 1)
-        data = self.userInfo
-        self.userInfo['first_name'] = 'omar'
+    def update_first_name_test(self):
+        data = {}
+        data['first_name'] = 'omar'
         response = self.client.put('/user/1/', data, format='json')
 
         user = User.objects.get(username='jackie')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(user.first_name, 'omar')
-        self.assertEqual(user.last_name, 'Bell')
 
-    def test_update_last_name(self):
-        user = User.objects.get(username='jackie')
-        data = self.userInfo
-        self.userInfo['last_name'] = 'ahmed'
+    def update_last_name_test(self):
+        data = {}
+        data['last_name'] = 'ahmed'
         response = self.client.put('/user/1/', data, format='json')
 
         user = User.objects.get(username='jackie')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(user.last_name, 'ahmed')
-        self.assertEqual(user.first_name, 'Jack')
 
-    def test_update_email(self):
-        user = User.objects.get(username='jackie')
-        data = self.userInfo
-        self.userInfo['email'] = 'newEmail@email.com'
+    def update_email_test(self):
+        data = {}
+        data['email'] = 'newEmail@email.com'
         response = self.client.put('/user/1/', data, format='json')
 
         user = User.objects.get(username='jackie')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        self.assertEqual(user.first_name, 'Jack')
-        self.assertEqual(user.last_name, 'Bell')
         self.assertEqual(user.email, 'newEmail@email.com')
 
-    def test_update_password(self):
-        #TODO: replace raw password comparison with login to verify new password
-        data = self.userInfo
-        self.userInfo['password'] = 'newPassword'
+    def update_password_test(self):
+        data = {}
+        data['password'] = 'newPassword'
         response = self.client.put('/user/1/', data, format='json')
 
         user = User.objects.get(username='jackie')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-        self.assertEqual(user.first_name, 'Jack')
-        self.assertEqual(user.last_name, 'Bell')
-        self.assertEqual(user.email, 'test@test.com')
-        self.assertEqual(user.password, 'newPassword')
+        self.assertNotEqual(user.password, 'newPassword')
 
-    def test_update_profile(self):
-        data = self.userInfo
-        profile = self.userInfo['profile']
-        profile['phone_number'] = '+17789290706'
+        # TODO: logout here then re login to verify
+        login_data = { 'username': self.userInfo['username'], 'password':
+                data['password'] }
+        response = self.client.post('/login/', login_data, secure=False)
+        self.assertEqual( response.status_code, status.HTTP_200_OK )
+
+    def update_profile_test(self):
+        data = { 'profile' : { 'phone_number' : '+17789290706' } }
         response = self.client.put('/user/1/', data, format='json')
         user = User.objects.get(username='jackie')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(user.profile.phone_number, '+17789290706')
-        self.assertEqual(user.first_name, 'Jack')
-        self.assertEqual(user.last_name, 'Bell')
-        self.assertEqual(user.email, 'test@test.com')
+
+    def test_update( self ):
+        self.prepare_test()
+
+        self.update_first_name_test()
+        self.update_last_name_test()
+        self.update_email_test()
+        self.update_password_test()
+        self.update_profile_test()

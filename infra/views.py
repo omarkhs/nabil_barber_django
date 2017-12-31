@@ -69,7 +69,7 @@ def user_view(request, pk=None, format=None):
         except ObjectDoesNotExist:
             return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        serializer = UserSerializer(user, data=request.data)
+        serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
