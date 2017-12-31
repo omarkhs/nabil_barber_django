@@ -112,6 +112,24 @@ class UserUpdateTestCase(APITestCase, TestCaseMixin):
     def setUpTestData( cls ):
         cls.userInfo = generateUser()
 
+    def test_delete_user( self ):
+        response = self.client.delete('/user/1/', {}, format='json')
+        self.assertEqual( response.status_code, status.HTTP_202_ACCEPTED )
+
+        all_users = User.objects.all()
+        self.assertEqual( len( all_users ), 0 )
+
+    def test_delete_non_existence_user( self ):
+        response = self.client.delete('/user/15/', {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+
+class UserUpdateTestCase(APITestCase, TestCaseMixin):
+
+    @classmethod
+    def setUpTestData( cls ):
+        cls.userInfo = generateUser()
+
     def prepare( self ):
         self.registerUser( self.userInfo )
         self.loginUser( self.userInfo )
