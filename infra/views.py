@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view, permission_classes, renderer_cla
 from rest_framework.permissions import IsAuthenticated
 from infra.serializers import UserSerializer
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 
 @api_view(['POST'])
 @renderer_classes((JSONRenderer,))
@@ -25,6 +25,7 @@ def register_view(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 @renderer_classes((JSONRenderer,))
@@ -38,6 +39,20 @@ def login_view(request):
         return Response({}, status=status.HTTP_200_OK)
     else:
         return Response({'auth':'Authenticaion failed'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# logout view
+@api_view(['POST'])
+@renderer_classes((JSONRenderer,))
+@csrf_exempt
+def logout_view(request):
+    if request.user.is_authenticated:
+        logout(request)
+        # logout method called above already returns HTTP_200_OK
+        return HttpResponse("You're logged out.")
+    else:
+        return Response({}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['GET', 'DELETE', 'PUT'])
 @renderer_classes((JSONRenderer,))
