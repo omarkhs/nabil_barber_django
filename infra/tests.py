@@ -205,12 +205,12 @@ class UserLoginLogout(APITestCase):
         response = self.client.post('/login/', login_data, secure=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.post('/logout/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content, "You're logged out.")
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
 
     def test_logout_when_no_user_was_already_loggedIn(self):
         response = self.client.post('/logout/')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_logout_when_called_twice(self):
         login_data = {'username': self.userInfo['username'], 'password':
@@ -219,7 +219,8 @@ class UserLoginLogout(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # first request to logout
-        self.client.post('/logout/')
+        response = self.client.post('/logout/')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         # calling logout again after user is already logged out
         response = self.client.post('/logout/')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

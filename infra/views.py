@@ -48,10 +48,9 @@ def login_view(request):
 def logout_view(request):
     if request.user.is_authenticated:
         logout(request)
-        # logout method called above already returns HTTP_200_OK
-        return HttpResponse("You're logged out.")
+        return Response({}, status=status.HTTP_202_ACCEPTED)
     else:
-        return Response({}, status=status.HTTP_404_NOT_FOUND)
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET', 'DELETE', 'PUT'])
