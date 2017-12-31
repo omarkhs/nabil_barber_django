@@ -37,12 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
+    'django_nose',
     'phonenumber_field',
     'infra',
     # 'dashboard',
 
 ]
+PHONENUMBER_DEFAULT_REGIONi = 'CA'
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
