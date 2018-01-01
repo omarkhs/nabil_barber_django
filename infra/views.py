@@ -29,8 +29,8 @@ class UserViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def login(self, request):
-        username = request.POST.get('username', None);
-        password = request.POST.get('password', None);
+        username = request.POST.get('username', None)
+        password = request.POST.get('password', None)
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
