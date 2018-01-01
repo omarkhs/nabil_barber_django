@@ -15,7 +15,7 @@ class UserRegistrationSimpleTestCase(InfraTestBase):
 
     # Password must be similar to username or any other attribute for the test to fail
     def test_register_similar_password( self ):
-        self.userInfo[ 'password' ] = 'jackie2'
+        self.userInfo[ 'password' ] = self.userInfo['username'] + '2'
         self.registerUser( self.userInfo, fail=True )
 
     def test_register_password_all_numbers( self ):
