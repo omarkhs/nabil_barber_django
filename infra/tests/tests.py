@@ -15,14 +15,14 @@ class UserDeleteTestCase(InfraTestBase):
 
     def test_delete_user( self ):
         response = self.client.delete('/user/1/', {}, format='json')
-        self.assertEqual( response.status_code, status.HTTP_202_ACCEPTED )
+        self.assertEqual( response.status_code, status.HTTP_204_NO_CONTENT)
 
         all_users = User.objects.all()
         self.assertEqual( len( all_users ), 0 )
 
     def test_delete_non_existence_user( self ):
         response = self.client.delete('/user/15/', {}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 class UserUpdateTestCase(InfraTestBase):
 
@@ -36,34 +36,34 @@ class UserUpdateTestCase(InfraTestBase):
 
     def update_first_name_case(self):
         data = { 'first_name' : 'omar' }
-        response = self.client.put('/user/1/', data, format='json')
+        response = self.client.patch('/user/1/', data, format='json')
 
         user = User.objects.get(username=self.userInfo['username'])
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(user.first_name, 'omar')
 
     def update_last_name_case(self):
         data = { 'last_name' : 'ahmed'}
-        response = self.client.put('/user/1/', data, format='json')
+        response = self.client.patch('/user/1/', data, format='json')
 
         user = User.objects.get(username=self.userInfo['username'])
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(user.last_name, 'ahmed')
 
     def update_email_case(self):
         data = { 'email' : 'newEmail@email.com'}
-        response = self.client.put('/user/1/', data, format='json')
+        response = self.client.patch('/user/1/', data, format='json')
 
         user = User.objects.get(username=self.userInfo['username'])
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(user.email, 'newEmail@email.com')
 
     def update_password_case(self):
         data = { 'username' : self.userInfo['username'], 'password' : 'newPassword' }
-        response = self.client.put('/user/1/', data, format='json')
+        response = self.client.patch('/user/1/', data, format='json')
 
         user = User.objects.get(username=self.userInfo['username'])
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(user.password, 'newPassword')
 
         # TODO: logout here then re login to verify
@@ -71,10 +71,10 @@ class UserUpdateTestCase(InfraTestBase):
 
     def update_profile_case(self):
         data = { 'profile' : { 'phone_number' : '+17789290706' } }
-        response = self.client.put('/user/1/', data, format='json')
+        response = self.client.patch('/user/1/', data, format='json')
 
         user = User.objects.get(username=self.userInfo['username'])
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(user.profile.phone_number, '+17789290706')
 
     # This is a test case where unlogged user tries to update any user,
@@ -85,7 +85,7 @@ class UserUpdateTestCase(InfraTestBase):
 
         data = {}
         data['first_name'] = 'omar'
-        response = self.client.put('/user/1/', data, format='json')
+        response = self.client.patch('/user/1/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def update_by_another_user( self ):
@@ -101,7 +101,7 @@ class UserUpdateTestCase(InfraTestBase):
         # Try to change the password of another user
         data = {}
         data['password'] = 'newPasswordToHack'
-        response = self.client.put('/user/1/', data, format='json')
+        response = self.client.patch('/user/1/', data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 

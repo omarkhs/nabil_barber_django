@@ -41,20 +41,10 @@ INSTALLED_APPS = [
     'django_nose',
     'phonenumber_field',
     'infra',
-    # 'dashboard',
-
 ]
+
 PHONENUMBER_DEFAULT_REGIONi = 'CA'
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
-
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        #'rest_framework.permissions.DjangoModelPermissions'
-        'rest_framework.permissions.AllowAny',
-        #'rest_framework.permissions.IsAuthenticated',
-    ],
-    # 'PAGE_SIZE': 10
-}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
