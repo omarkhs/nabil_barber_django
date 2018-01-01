@@ -92,7 +92,7 @@ class UserDeleteTestCase(APITestCase, TestCaseMixin):
         response = self.client.delete('/user/15/', {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-
+# why do we have this class with the same exact tests as above, but with the same name as class below
 class UserUpdateTestCase(APITestCase, TestCaseMixin):
 
     @classmethod
@@ -129,7 +129,7 @@ class UserUpdateTestCase(APITestCase, TestCaseMixin):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(user.first_name, 'omar')
 
-
+    # seems like a duplicate method
     def update_first_name_case(self):
         data = { 'first_name' : 'omar' }
         response = self.client.put('/user/1/', data, format='json')
@@ -176,8 +176,13 @@ class UserUpdateTestCase(APITestCase, TestCaseMixin):
     # This is a test case where unlogged user tries to update any user,
     # You should log out first, then try to update and it should fail
     def update_by_non_logged_user( self ):
-        #TODO
-        pass
+        response = self.client.post(LOGOUT_URL)
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        data = {}
+        data['first_name'] = 'omar'
+        response = self.client.put('/user/1/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def update_by_another_user( self ):
         other_userInfo = generateUser()
@@ -195,14 +200,14 @@ class UserUpdateTestCase(APITestCase, TestCaseMixin):
         response = self.client.put('/user/1/', data, format='json')
 
         user = User.objects.get(username=self.userInfo['username'])
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # NOTE: the return code should be either 401 or 403, I am not sure, when the
         # feature is working properly, it should return this.
 
         # It should fail before it reaches this point, if it doesn't then the user is
         # able to change the password of another user.
-        assert False, 'I should not be here'
+        #assert False, 'I should not be here'
 
 
     def test_update( self ):
