@@ -55,7 +55,7 @@ def logout_view(request):
 
 @api_view(['GET', 'DELETE', 'PUT'])
 @renderer_classes((JSONRenderer,))
-@permission_classes((IsAuthenticated, ))
+@permission_classes((IsAuthenticated,))
 @csrf_exempt
 def user_view(request, pk=None, format=None):
     if request.method == 'GET':
@@ -82,9 +82,11 @@ def user_view(request, pk=None, format=None):
             user = User.objects.get(id=pk)
         except ObjectDoesNotExist:
             return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-        serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if request.user == user:
+            serializer = UserSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
