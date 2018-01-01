@@ -12,14 +12,21 @@ from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import IsAuthenticated
 from infra.serializers import UserSerializer
-from infra.permissions import UserPermissions
+from infra.permissions import IsOwner
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate, login, logout
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
-    permission_classes = (UserPermissions,)
+    # permission_classes = (UserPermissions,)
+
+    def get_permissions(self):
+        permission_classes = []
+        if self.action in ['update','partial_update']:
+            permission_classes.append(IsOwner)
+
+        return [permission() for permission in permission_classes]
 
     def login(self, request):
         username = request.POST.get('username', None);
@@ -37,3 +44,4 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({}, status=status.HTTP_202_ACCEPTED)
         else:
             return Response({}, status=status.HTTP_204_NO_CONTENT)
+
