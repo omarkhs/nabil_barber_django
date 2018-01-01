@@ -12,7 +12,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import IsAuthenticated
 from infra.serializers import UserSerializer
-from infra.permissions import IsOwner
+from infra.permissions import IsUserOwner
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate, login, logout
 
@@ -24,7 +24,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         permission_classes = []
         if self.action in ['update','partial_update']:
-            permission_classes.append(IsOwner)
+            permission_classes.append(IsUserOwner)
 
         return [permission() for permission in permission_classes]
 
