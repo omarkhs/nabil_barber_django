@@ -17,6 +17,10 @@ class InfraTestBase( APITestCase ):
         response = self.client.post(self.urls['login'], login_data, secure=False)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def logoutUser( self ):
+        response = self.client.post(self.urls['logout'])
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
     def registerUser( self, data, fail=False ):
         response = self.client.post(self.urls['register'], data, format='json')
         if not fail:
